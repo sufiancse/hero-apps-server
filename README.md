@@ -21,12 +21,3 @@ npm run dev
 ```bash
 npm start
 ```
-
-Health check
-
-Open http://localhost:3000/health — should return `OK`.
-
-Notes
-
-- `PORT` can be set via environment variable. Defaults to `3000`.
-- The project includes `cors` and basic error handling.

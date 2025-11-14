@@ -20,7 +20,7 @@ app.use(async (req, res, next) => {
 
 //ports & clients
 const port = process.env.PORT || 5000;
-const uri = process.env.URI
+const uri = process.env.URI;
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -50,8 +50,33 @@ const appsCollection = database.collection("apps");
 
 app.get("/apps", async (req, res) => {
   try {
-    const apps = await appsCollection.find().toArray();
-    res.send(apps);
+    const {
+      limit = 0,
+      skip = 0,
+      sort = "size",
+      order = "desc",
+      search = "",
+    } = req.query;
+
+    const sortOption = {};
+    sortOption[sort || "size"] = order === "asc" ? 1 : -1;
+
+    let searchQuery = {}
+    if(searchQuery){
+      searchQuery.title = {$regex: search, $options: "i"}
+    }
+
+    const apps = await appsCollection
+      .find(searchQuery)
+      .project({ description: 0, ratings: 0 })
+      .sort(sortOption)
+      .limit(Number(limit))
+      .skip(Number(skip))
+      .toArray();
+
+    const count = await appsCollection.countDocuments(searchQuery);
+
+    res.send({ apps, count });
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Internal Server Error" });
